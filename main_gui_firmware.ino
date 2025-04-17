@@ -1,67 +1,12 @@
-//---------------------------------------- Including Libraries.
-#include <lvgl.h>
-#include <TFT_eSPI.h>
-#include <XPT2046_Touchscreen.h>
-#include "ui.h"
-#include "images.h"
-#include "actions.h"
-#include "vars.h"
-#include "WiFi.h"
-#include <Arduino_JSON.h>
-#include "time.h"
-#include "esp_sntp.h"
-#include <SPIFFS.h>
-//----------------------------------------
-
-#define FORMAT_SPIFFS_IF_FAILED true
-
-// Defines the width and height of the screen, also the font size.
-#define SCREEN_WIDTH 240
-#define SCREEN_HEIGHT 320
-#define SCREEN_ROTATION LV_DISPLAY_ROTATION_90
-
-
-// Replace with the calibration results on your TFT LCD Touchscreen.
-#define touchscreen_Min_X 200
-#define touchscreen_Max_X 3700
-#define touchscreen_Min_Y 240
-#define touchscreen_Max_Y 3800
-//----------------------------------------
-
-// Touchscreen pins
-#define XPT2046_IRQ 36   // T_IRQ
-#define XPT2046_MOSI 32  // T_DIN
-#define XPT2046_MISO 39  // T_OUT
-#define XPT2046_CLK 25   // T_CLK
-#define XPT2046_CS 33    // T_CS
-
-SPIClass touchscreenSPI = SPIClass(VSPI);
-XPT2046_Touchscreen touchscreen(XPT2046_CS, XPT2046_IRQ);
-
-#define DRAW_BUF_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT / 10 * (LV_COLOR_DEPTH / 8))
-uint8_t* draw_buf;
-
-// Variables for x, y and z values ​​on the touchscreen.
-uint16_t x, y, z;
-
-// Used to track the tick timer.
-uint32_t lastTick = 0;
-unsigned long previousMillis = 0;
-
-String networks;
-bool network_scanned = false;
-
-const char* ntpServer1 = "pool.ntp.org";
-const char* ntpServer2 = "time.nist.gov";
-const long gmtOffset_sec = 3600;
-const int daylightOffset_sec = 0;
+#define TEST_MODE
+#define ERROR_LOGGING
+#include "main.h"
 
 void initSPIFFS() {
-  // Initialize SPIFFS
   if (!SPIFFS.begin(true)) {
-    //    Serial.println("An error has occurred while mounting SPIFFS");
+    LOG_ERR("An error has occurred while mounting SPIFFS");
   }
-  //  Serial.println("SPIFFS mounted successfully");
+   LOG("SPIFFS mounted successfully");
 }
 
 extern const char* get_var_networks() {
@@ -74,19 +19,18 @@ extern void set_var_networks(const char* value) {
 
 String readFile(fs::FS& fs, const char* path) {
   static String file_content;
-  Serial.printf("Reading file: %s\r\n", path);
+  LOGF("Reading file: %s\r\n", path);
 
   fs::File file = fs.open(path);
   if (!file || file.isDirectory()) {
-    Serial.println("- failed to open file for reading");
+    LOG_ERR("- failed to open file for reading");
     return String("");
   }
 
-  Serial.println("- read from file:");
+  LOG("- read from file:");
   char read_char;
   while (file.available()) {
     read_char = file.read();
-    Serial.write(read_char);
     file_content += read_char;
   }
   file.close();
@@ -94,26 +38,19 @@ String readFile(fs::FS& fs, const char* path) {
 }
 
 void writeFile(fs::FS& fs, const char* path, const char* message) {
-  Serial.printf("Writing file: %s\r\n", path);
+  LOGF("Writing file: %s\r\n", path);
 
   fs::File file = fs.open(path, FILE_WRITE);
   if (!file) {
-    Serial.println("- failed to open file for writing");
+    LOG_ERR("- failed to open file for writing");
     return;
   }
   if (file.print(message)) {
-    Serial.println("- file written");
+    LOGF("- file written");
   } else {
-    Serial.println("- write failed");
+    LOG_ERR("- write failed");
   }
   file.close();
-}
-
-// If logging is enabled, it will inform the user about what is happening in the library.
-void log_print(lv_log_level_t level, const char* buf) {
-  LV_UNUSED(level);
-  Serial.println(buf);
-  Serial.flush();
 }
 
 // Subroutines to update screen displays or widgets.
@@ -126,20 +63,20 @@ void update_UI() {
 void getTime() {
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo, 10)) {
-    Serial.println("No time available (yet)");
+    LOG_ERR("No time available (yet)");
     return;
   }
   char date[16], time[16];
   strftime(date, 16, "%d/%m/%Y", &timeinfo);
   strftime(time, 16, "%I:%M %p", &timeinfo);
-  Serial.printf("Date: %s \n Time: %s\n", date, time);
+  // LOGF("Date: %s \nTime: %s\n", date, time);
   lv_label_set_text(objects.home_date_content, date);
   lv_label_set_text(objects.home_time_content, time);
 }
 
 // Callback function (gets called when time adjusts via NTP)
 void timeavailable(struct timeval* t) {
-  Serial.println("Got time adjustment from NTP!");
+  LOG("Got time adjustment from NTP!");
   getTime();
 }
 
@@ -250,10 +187,8 @@ void action_class_details_text_area_numerical_event_cb(lv_event_t* e) {
 void action_home_to_settings(lv_event_t* e) {
   lv_event_code_t code = lv_event_get_code(e);  //--> Get the event code.
 
-  if (code == LV_EVENT_CLICKED) {
-    Serial.println("");
+  if (code == LV_EVENT_CLICKED) 
     lv_scr_load_anim(objects.settings_screen, LV_SCR_LOAD_ANIM_OVER_LEFT, 300, 0, false);
-  }
   return;
 }
 
@@ -261,7 +196,6 @@ void action_home_to_capture(lv_event_t* e) {
   lv_event_code_t code = lv_event_get_code(e);  //--> Get the event code.
 
   if (code == LV_EVENT_CLICKED) {
-    Serial.println("");
     lv_scr_load_anim(objects.capture_screen, LV_SCR_LOAD_ANIM_OVER_RIGHT, 300, 0, false);
   }
   return;
@@ -271,7 +205,6 @@ void action_home_to_class_details(lv_event_t* e) {
   lv_event_code_t code = lv_event_get_code(e);  //--> Get the event code.
 
   if (code == LV_EVENT_CLICKED) {
-    Serial.println("");
     lv_scr_load_anim(objects.class_details_screen, LV_SCR_LOAD_ANIM_OVER_TOP, 300, 0, false);
   }
   return;
@@ -279,15 +212,17 @@ void action_home_to_class_details(lv_event_t* e) {
 
 void action_save_settings_handler(lv_event_t* e) {
   char selected_network[32];
-  JSONVar wifi_cred;
+  JSONVar ret;
+  ret["args"] = JSONVar();
   lv_dropdown_get_selected_str(objects.wifi_ssid_dropdown, selected_network, 32);
-  wifi_cred["ssid"] = String(selected_network);
-  wifi_cred["pwd"] = String(lv_textarea_get_text(objects.wifi_pwd_textarea_content));
+  ret["args"]["ssid"] = String(selected_network);
+  ret["args"]["pwd"] = String(lv_textarea_get_text(objects.wifi_pwd_textarea_content));
 
   Serial.printf("Connecting to %s ", selected_network);
-  WiFi.begin((const char*)wifi_cred["ssid"], (const char*)wifi_cred["pwd"]);
+  WiFi.begin((const char*)ret["args"]["ssid"], (const char*)ret["args"]["pwd"]);
   static uint32_t wifi_timer = millis();
 
+  // TODO: Adjust this
   while (WiFi.status() != WL_CONNECTED) {
     if (millis() - wifi_timer > 10000) {
       wifi_timer = millis();
@@ -296,10 +231,10 @@ void action_save_settings_handler(lv_event_t* e) {
     }
   }
 
-  Serial.println("CONNECTED");
-  writeFile(SPIFFS, "/config.json", JSON.stringify(wifi_cred).c_str());
-  wifi_cred["cmd"] = "change_wifi";
-  Serial.println(JSON.stringify(wifi_cred).c_str());
+  LOG("CONNECTED");
+  writeFile(SPIFFS, "/config.json", JSON.stringify(ret["args"]).c_str());
+  ret["args"]["cmd"] = "change_wifi";
+  Serial.println(JSON.stringify(ret).c_str());
   return;
 }
 
@@ -307,7 +242,6 @@ void action_settings_to_home(lv_event_t* e) {
   lv_event_code_t code = lv_event_get_code(e);  //--> Get the event code.
 
   if (code == LV_EVENT_CLICKED) {
-    Serial.println("");
     lv_scr_load_anim(objects.home_screen, LV_SCR_LOAD_ANIM_OVER_RIGHT, 300, 0, false);
   }
   return;
@@ -317,7 +251,6 @@ void action_class_details_to_home(lv_event_t* e) {
   lv_event_code_t code = lv_event_get_code(e);  //--> Get the event code.
 
   if (code == LV_EVENT_CLICKED) {
-    Serial.println("");
     lv_scr_load_anim(objects.home_screen, LV_SCR_LOAD_ANIM_OVER_BOTTOM, 300, 0, false);
   }
   return;
@@ -325,23 +258,25 @@ void action_class_details_to_home(lv_event_t* e) {
 
 void action_start_class_handler(lv_event_t* e) {
   JSONVar class_details;
-  class_details["venue"] = lv_textarea_get_text(objects.class_venue_textarea_content);
-  class_details["code"] = lv_textarea_get_text(objects.course_code_textarea_content);
+  class_details["args"] = JSONVar();
+  class_details["args"]["venue"] = lv_textarea_get_text(objects.class_venue_textarea_content);
+  class_details["args"]["code"] = lv_textarea_get_text(objects.course_code_textarea_content);
 
   char level[4];
   lv_dropdown_get_selected_str(objects.class_level_dropdown, level, 4);
-  class_details["level"] = level;
+  class_details["args"]["level"] = level;
 
   char dept[4];
   lv_dropdown_get_selected_str(objects.class_department_dropdown, dept, 4);
-  class_details["dept"] = dept;
+  class_details["args"]["dept"] = dept;
 
   char time[4];
   lv_dropdown_get_selected_str(objects.start_time_dropdown, time, 4);
 
-  class_details["start_time"] = String(lv_textarea_get_text(objects.start_time_textarea_content)) + " " + time;
-  class_details["duration"] = lv_textarea_get_text(objects.class_duration_textarea_content);
+  class_details["args"]["start_time"] = String(lv_textarea_get_text(objects.start_time_textarea_content)) + " " + time;
+  class_details["args"]["duration"] = lv_textarea_get_text(objects.class_duration_textarea_content);
 
+  class_details["cmd"] = "start_class";
   Serial.println(JSON.stringify(class_details).c_str());
   lv_scr_load_anim(objects.current_user_screen, LV_SCR_LOAD_ANIM_OVER_TOP, 300, 0, false);
 
@@ -352,7 +287,6 @@ void action_capture_to_home(lv_event_t* e) {
   lv_event_code_t code = lv_event_get_code(e);  //--> Get the event code.
 
   if (code == LV_EVENT_CLICKED) {
-    Serial.println("");
     lv_scr_load_anim(objects.home_screen, LV_SCR_LOAD_ANIM_OVER_LEFT, 300, 0, false);
   }
   return;
@@ -364,7 +298,22 @@ void action_capture_fprint_handler(lv_event_t* e) {
 }
 
 void action_capture_submit_handler(lv_event_t* e) {
+  JSONVar biodata;
+  biodata["args"] = JSONVar();
 
+  biodata["args"]["name"] = lv_textarea_get_text(objects.student_name_textarea_content);
+  biodata["args"]["matric_no"] =  String(lv_textarea_get_text(objects.student_matric_no_year)) + 
+                          "/" + 
+                          String(lv_textarea_get_text(objects.student_matric_no_reg_no));
+
+  char level[4], dept[4];
+  lv_dropdown_get_selected_str(objects.student_level_dropdown, level, 4);
+  biodata["args"]["level"] = level;
+  lv_dropdown_get_selected_str(objects.student_department_dropdown, dept, 4);
+  biodata["args"]["dept"] = dept;
+
+  biodata["cmd"] = "save_new_student";
+  Serial.println(JSON.stringify(biodata));
   return;
 }
 
@@ -385,11 +334,10 @@ void printScannedNetworks(uint16_t networksFound) {
 
 void setup() {
   Serial.begin(921600);
-  while (!Serial)
-    ;
+  while (!Serial);
 
   if (!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
-    Serial.println("SPIFFS Mount Failed");
+    LOG_ERR("ERR: SPIFFS Mount Failed");
     return;
   }
 
@@ -452,12 +400,66 @@ void setup() {
   lv_obj_add_event_cb(objects.student_matric_no_reg_no, action_capture_text_area_numerical_event_cb, LV_EVENT_ALL, (void*)objects.keyboard_capture);
 
   lv_obj_add_event_cb(
+    objects.home_screen,
+    [](lv_event_t* e) -> void {
+      lv_event_code_t code = lv_event_get_code(e);
+
+      if (code == LV_EVENT_SCREEN_LOADED){
+        Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"home_screen\"}}"));
+      }
+      return;
+    },
+    LV_EVENT_SCREEN_LOADED,
+    NULL);
+
+  lv_obj_add_event_cb(
     objects.settings_screen,
     [](lv_event_t* e) -> void {
       lv_event_code_t code = lv_event_get_code(e);
 
-      if (code == LV_EVENT_SCREEN_LOADED)
+      if (code == LV_EVENT_SCREEN_LOADED){
         network_scanned = false;
+        Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"settings_screen\"}}"));
+      }
+      return;
+    },
+    LV_EVENT_SCREEN_LOADED,
+    NULL);
+
+  lv_obj_add_event_cb(
+    objects.capture_screen,
+    [](lv_event_t* e) -> void {
+      lv_event_code_t code = lv_event_get_code(e);
+
+      if (code == LV_EVENT_SCREEN_LOADED){
+        Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"capture_screen\"}}"));
+      }
+      return;
+    },
+    LV_EVENT_SCREEN_LOADED,
+    NULL);
+
+  lv_obj_add_event_cb(
+    objects.class_details_screen,
+    [](lv_event_t* e) -> void {
+      lv_event_code_t code = lv_event_get_code(e);
+
+      if (code == LV_EVENT_SCREEN_LOADED){
+        Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"class_details_screen\"}}"));
+      }
+      return;
+    },
+    LV_EVENT_SCREEN_LOADED,
+    NULL);
+
+  lv_obj_add_event_cb(
+    objects.current_user_screen,
+    [](lv_event_t* e) -> void {
+      lv_event_code_t code = lv_event_get_code(e);
+
+      if (code == LV_EVENT_SCREEN_LOADED){
+        Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"current_user_screen\"}}"));
+      }
       return;
     },
     LV_EVENT_SCREEN_LOADED,
@@ -476,15 +478,11 @@ void setup() {
 
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
-  update_UI();
 
   if (lv_scr_act() == objects.settings_screen && !network_scanned) {
     int16_t WiFiScanStatus = WiFi.scanComplete();
     if (WiFiScanStatus < 0) {  // it is busy scanning or got an error
       if (WiFiScanStatus == WIFI_SCAN_FAILED) {
-        Serial.println("WiFi Scan has failed. Starting again.");
         startWiFiScan();
       }
       // other option is status WIFI_SCAN_RUNNING - just wait.
@@ -503,5 +501,7 @@ void loop() {
       home_screen_timer = millis();
     }
   }
+
+  update_UI();
   delay(5);
 }
