@@ -565,6 +565,11 @@ void loop() {
         lv_label_set_text(objects.current_user_matric_no, current_user["matric_no"]);
         lv_label_set_text(objects.current_user_level, current_user["level"]);
         lv_label_set_text(objects.current_user_dept, current_user["dept"]);
+        // TODO: Show no picture for no auth
+        if ((bool)current_user["verified"])
+          lv_image_set_src(objects.current_user_image, &img_img_accept);
+        else
+          lv_image_set_src(objects.current_user_image, &img_img_reject);
         lv_obj_clear_flag(objects.current_user_info_panel, LV_OBJ_FLAG_HIDDEN);
       }
     }
