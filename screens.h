@@ -35,12 +35,14 @@ typedef struct _objects_t {
     lv_obj_t *class_department_dropdown;
     lv_obj_t *class_level_dropdown;
     lv_obj_t *start_time_dropdown;
+    lv_obj_t *class_auth_mode_dropdown;
     lv_obj_t *capture_back_btn;
     lv_obj_t *student_name_textarea_content;
     lv_obj_t *student_matric_no_year;
     lv_obj_t *capture_fprint_btn;
     lv_obj_t *capture_image_btn;
     lv_obj_t *capture_submit_btn;
+    lv_obj_t *flash_card_btn;
     lv_obj_t *keyboard_capture;
     lv_obj_t *student_matric_no_reg_no;
     lv_obj_t *student_department_dropdown;
@@ -81,7 +83,6 @@ void tick_screen_by_id(enum ScreensEnum screenId);
 void tick_screen(int screen_index);
 
 void create_screens();
-extern bool network_scanned;
 
 
 #ifdef __cplusplus

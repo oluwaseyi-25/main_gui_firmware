@@ -78,3 +78,6 @@ const char* ntpServer1 = "pool.ntp.org";
 const char* ntpServer2 = "time.nist.gov";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 0;
+
+String current_user_str;
+JSONVar current_user;

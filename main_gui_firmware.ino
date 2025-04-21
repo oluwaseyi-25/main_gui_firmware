@@ -6,7 +6,7 @@ void initSPIFFS() {
   if (!SPIFFS.begin(true)) {
     LOG_ERR("An error has occurred while mounting SPIFFS");
   }
-   LOG("SPIFFS mounted successfully");
+  LOG("SPIFFS mounted successfully");
 }
 
 extern const char* get_var_networks() {
@@ -187,7 +187,7 @@ void action_class_details_text_area_numerical_event_cb(lv_event_t* e) {
 void action_home_to_settings(lv_event_t* e) {
   lv_event_code_t code = lv_event_get_code(e);  //--> Get the event code.
 
-  if (code == LV_EVENT_CLICKED) 
+  if (code == LV_EVENT_CLICKED)
     lv_scr_load_anim(objects.settings_screen, LV_SCR_LOAD_ANIM_OVER_LEFT, 300, 0, false);
   return;
 }
@@ -276,6 +276,10 @@ void action_start_class_handler(lv_event_t* e) {
   class_details["args"]["start_time"] = String(lv_textarea_get_text(objects.start_time_textarea_content)) + " " + time;
   class_details["args"]["duration"] = lv_textarea_get_text(objects.class_duration_textarea_content);
 
+  char auth[16];
+  lv_dropdown_get_selected_str(objects.class_auth_mode_dropdown, auth, 16);
+  class_details["args"]["auth_mode"] = auth;
+
   class_details["cmd"] = "start_class";
   Serial.println(JSON.stringify(class_details).c_str());
   lv_scr_load_anim(objects.current_user_screen, LV_SCR_LOAD_ANIM_OVER_TOP, 300, 0, false);
@@ -292,7 +296,22 @@ void action_capture_to_home(lv_event_t* e) {
   return;
 }
 
+void action_current_user_to_home(lv_event_t* e) {
+  lv_event_code_t code = lv_event_get_code(e);  //--> Get the event code.
+  lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_active());
+
+  if (code == LV_EVENT_GESTURE && dir == LV_DIR_BOTTOM) {
+    lv_scr_load_anim(objects.home_screen, LV_SCR_LOAD_ANIM_OVER_BOTTOM, 300, 0, false);
+  }
+  return;
+}
+
 void action_capture_fprint_handler(lv_event_t* e) {
+
+  return;
+}
+
+void action_capture_image_handler(lv_event_t* e) {
 
   return;
 }
@@ -302,9 +321,7 @@ void action_capture_submit_handler(lv_event_t* e) {
   biodata["args"] = JSONVar();
 
   biodata["args"]["name"] = lv_textarea_get_text(objects.student_name_textarea_content);
-  biodata["args"]["matric_no"] =  String(lv_textarea_get_text(objects.student_matric_no_year)) + 
-                          "/" + 
-                          String(lv_textarea_get_text(objects.student_matric_no_reg_no));
+  biodata["args"]["matric_no"] = String(lv_textarea_get_text(objects.student_matric_no_year)) + "/" + String(lv_textarea_get_text(objects.student_matric_no_reg_no));
 
   char level[4], dept[4];
   lv_dropdown_get_selected_str(objects.student_level_dropdown, level, 4);
@@ -313,6 +330,24 @@ void action_capture_submit_handler(lv_event_t* e) {
   biodata["args"]["dept"] = dept;
 
   biodata["cmd"] = "save_new_student";
+  Serial.println(JSON.stringify(biodata));
+  return;
+}
+
+void action_flash_card_handler(lv_event_t* e) {
+  JSONVar biodata;
+  biodata["args"] = JSONVar();
+
+  biodata["args"]["name"] = lv_textarea_get_text(objects.student_name_textarea_content);
+  biodata["args"]["matric_no"] = String(lv_textarea_get_text(objects.student_matric_no_year)) + "/" + String(lv_textarea_get_text(objects.student_matric_no_reg_no));
+
+  char level[4], dept[4];
+  lv_dropdown_get_selected_str(objects.student_level_dropdown, level, 4);
+  biodata["args"]["level"] = level;
+  lv_dropdown_get_selected_str(objects.student_department_dropdown, dept, 4);
+  biodata["args"]["dept"] = dept;
+
+  biodata["cmd"] = "flash_card";
   Serial.println(JSON.stringify(biodata));
   return;
 }
@@ -334,7 +369,8 @@ void printScannedNetworks(uint16_t networksFound) {
 
 void setup() {
   Serial.begin(921600);
-  while (!Serial);
+  while (!Serial)
+    ;
 
   if (!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
     LOG_ERR("ERR: SPIFFS Mount Failed");
@@ -404,7 +440,7 @@ void setup() {
     [](lv_event_t* e) -> void {
       lv_event_code_t code = lv_event_get_code(e);
 
-      if (code == LV_EVENT_SCREEN_LOADED){
+      if (code == LV_EVENT_SCREEN_LOADED) {
         Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"home_screen\"}}"));
       }
       return;
@@ -417,7 +453,7 @@ void setup() {
     [](lv_event_t* e) -> void {
       lv_event_code_t code = lv_event_get_code(e);
 
-      if (code == LV_EVENT_SCREEN_LOADED){
+      if (code == LV_EVENT_SCREEN_LOADED) {
         network_scanned = false;
         Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"settings_screen\"}}"));
       }
@@ -431,7 +467,7 @@ void setup() {
     [](lv_event_t* e) -> void {
       lv_event_code_t code = lv_event_get_code(e);
 
-      if (code == LV_EVENT_SCREEN_LOADED){
+      if (code == LV_EVENT_SCREEN_LOADED) {
         Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"capture_screen\"}}"));
       }
       return;
@@ -444,7 +480,7 @@ void setup() {
     [](lv_event_t* e) -> void {
       lv_event_code_t code = lv_event_get_code(e);
 
-      if (code == LV_EVENT_SCREEN_LOADED){
+      if (code == LV_EVENT_SCREEN_LOADED) {
         Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"class_details_screen\"}}"));
       }
       return;
@@ -457,7 +493,7 @@ void setup() {
     [](lv_event_t* e) -> void {
       lv_event_code_t code = lv_event_get_code(e);
 
-      if (code == LV_EVENT_SCREEN_LOADED){
+      if (code == LV_EVENT_SCREEN_LOADED) {
         Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"current_user_screen\"}}"));
       }
       return;
@@ -474,7 +510,6 @@ void setup() {
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
   }
 }
-
 
 
 void loop() {
@@ -499,6 +534,35 @@ void loop() {
     if (millis() - home_screen_timer > 1000) {
       getTime();
       home_screen_timer = millis();
+    }
+  }
+
+  if (lv_scr_act() == objects.current_user_screen) {
+    static char read_char;
+    read_char = 0;
+    current_user_str = "";
+    static uint32_t panel_timer = millis();
+
+    while (Serial.available() > 0) {
+      read_char = Serial.read();
+      current_user_str += read_char;
+    }
+    
+    if (!current_user_str.isEmpty()) {
+      current_user = JSON.parse(current_user_str);
+      if (JSON.typeof_(current_user) != "undefined") {
+        panel_timer = millis();
+        lv_label_set_text(objects.current_user_matric_no, current_user["matric_no"]);
+        lv_label_set_text(objects.current_user_level, current_user["level"]);
+        lv_label_set_text(objects.current_user_dept, current_user["dept"]);
+        lv_obj_clear_flag(objects.current_user_info_panel, LV_OBJ_FLAG_HIDDEN);
+      }
+    }
+
+
+    if (millis() - panel_timer > 5000) {
+      lv_obj_add_flag(objects.current_user_info_panel, LV_OBJ_FLAG_HIDDEN);
+      panel_timer = millis();
     }
   }
 
