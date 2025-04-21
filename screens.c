@@ -726,6 +726,45 @@ void create_screen_capture_screen() {
             lv_dropdown_set_options(obj, "100\n200\n300\n400\n500");
             lv_dropdown_set_selected(obj, 0);
         }
+        {
+            // capture_info_panel
+            lv_obj_t *obj = lv_obj_create(parent_obj);
+            objects.capture_info_panel = obj;
+            lv_obj_set_pos(obj, 11, 24);
+            lv_obj_set_size(obj, 300, 200);
+            lv_obj_add_flag(obj, LV_OBJ_FLAG_FLOATING|LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
+            {
+                lv_obj_t *parent_obj = obj;
+                {
+                    // capture_info_panel_close_btn
+                    lv_obj_t *obj = lv_button_create(parent_obj);
+                    objects.capture_info_panel_close_btn = obj;
+                    lv_obj_set_pos(obj, 238, 1);
+                    lv_obj_set_size(obj, 30, 30);
+                    lv_obj_add_event_cb(obj, action_capture_panel_hide, LV_EVENT_CLICKED, (void *)0);
+                    {
+                        lv_obj_t *parent_obj = obj;
+                        {
+                            lv_obj_t *obj = lv_image_create(parent_obj);
+                            lv_obj_set_pos(obj, -6, -1);
+                            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                            lv_image_set_src(obj, &img_img_close);
+                        }
+                    }
+                }
+                {
+                    // capture_info_text
+                    lv_obj_t *obj = lv_label_create(parent_obj);
+                    objects.capture_info_text = obj;
+                    lv_obj_set_pos(obj, 10, 76);
+                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                    lv_obj_set_style_text_font(obj, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_label_set_text(obj, "capture_info_text");
+                }
+            }
+        }
     }
     
     tick_screen_capture_screen();
@@ -852,7 +891,6 @@ void create_screen_current_user_screen() {
 }
 
 void tick_screen_current_user_screen() {
-  
 }
 
 

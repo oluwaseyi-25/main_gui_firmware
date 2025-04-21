@@ -47,6 +47,9 @@ typedef struct _objects_t {
     lv_obj_t *student_matric_no_reg_no;
     lv_obj_t *student_department_dropdown;
     lv_obj_t *student_level_dropdown;
+    lv_obj_t *capture_info_panel;
+    lv_obj_t *capture_info_panel_close_btn;
+    lv_obj_t *capture_info_text;
     lv_obj_t *current_user_info_panel;
     lv_obj_t *current_user_matric_no;
     lv_obj_t *current_user_level;

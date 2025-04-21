@@ -81,3 +81,4 @@ const int daylightOffset_sec = 0;
 
 String current_user_str;
 JSONVar current_user;
+bool is_capture_panel_hidden;

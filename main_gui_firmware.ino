@@ -307,12 +307,16 @@ void action_current_user_to_home(lv_event_t* e) {
 }
 
 void action_capture_fprint_handler(lv_event_t* e) {
-
+  Serial.println("{\"cmd\":\"capture_fprint\",\"args\":{}}");
+  lv_obj_clear_flag(objects.capture_info_panel, LV_OBJ_FLAG_HIDDEN);
+  is_capture_panel_hidden = false;
   return;
 }
 
 void action_capture_image_handler(lv_event_t* e) {
-
+  Serial.println("{\"cmd\":\"capture_image\",\"args\":{}}");
+  lv_obj_clear_flag(objects.capture_info_panel, LV_OBJ_FLAG_HIDDEN);
+  is_capture_panel_hidden = false;
   return;
 }
 
@@ -349,6 +353,12 @@ void action_flash_card_handler(lv_event_t* e) {
 
   biodata["cmd"] = "flash_card";
   Serial.println(JSON.stringify(biodata));
+  return;
+}
+
+void action_capture_panel_hide(lv_event_t* e) {
+  lv_obj_add_flag(objects.capture_info_panel, LV_OBJ_FLAG_HIDDEN);
+  is_capture_panel_hidden = true;
   return;
 }
 
@@ -547,7 +557,7 @@ void loop() {
       read_char = Serial.read();
       current_user_str += read_char;
     }
-    
+
     if (!current_user_str.isEmpty()) {
       current_user = JSON.parse(current_user_str);
       if (JSON.typeof_(current_user) != "undefined") {
@@ -564,6 +574,19 @@ void loop() {
       lv_obj_add_flag(objects.current_user_info_panel, LV_OBJ_FLAG_HIDDEN);
       panel_timer = millis();
     }
+  }
+
+  if (lv_scr_act() == objects.capture_screen && !is_capture_panel_hidden && Serial.available() > 0) {
+    static char read_char;
+    static String capture_panel_content;
+
+    while (Serial.available() > 0) {
+      read_char = Serial.read();
+      capture_panel_content += read_char;
+    }
+
+    lv_label_set_text(objects.capture_info_text, capture_panel_content.c_str());
+    capture_panel_content = "";
   }
 
   update_UI();
