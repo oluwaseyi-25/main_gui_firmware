@@ -97,7 +97,8 @@ static uint32_t my_tick();
 void startWiFiScan();
 void printScannedNetworks(uint16_t networksFound);
 
-
+// Action Handlers
+void hide_keyboard(lv_event_t *e);
 void action_settings_text_area_event_cb(lv_event_t* e);
 void action_capture_text_area_event_cb(lv_event_t* e);
 void action_capture_text_area_numerical_event_cb(lv_event_t* e);

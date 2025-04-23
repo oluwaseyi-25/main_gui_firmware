@@ -151,8 +151,12 @@ void setup()
       LV_EVENT_SCREEN_LOADED,
       NULL);
 
+  lv_obj_add_event_cb(objects.keyboard_capture, hide_keyboard, LV_EVENT_READY, NULL);
+  lv_obj_add_event_cb(objects.keyboard_class, hide_keyboard, LV_EVENT_READY, NULL);
+  lv_obj_add_event_cb(objects.keyboard_settings, hide_keyboard, LV_EVENT_READY, NULL);
+  
   lv_dropdown_set_options(objects.wifi_ssid_dropdown, get_var_networks());
-
+  
   // Time keeping
   if (WiFi.isConnected())
   {
@@ -668,6 +672,18 @@ void action_capture_panel_hide(lv_event_t *e)
   lv_obj_add_flag(objects.capture_info_panel, LV_OBJ_FLAG_HIDDEN);
   is_capture_panel_hidden = true;
   return;
+}
+
+void hide_keyboard(lv_event_t *e)
+{
+  lv_event_code_t code = lv_event_get_code(e);
+  lv_obj_t *keyboard = (lv_obj_t *)lv_event_get_target(e);
+
+  if (code == LV_EVENT_READY)
+  {
+    lv_keyboard_set_textarea(keyboard, NULL);
+    lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
+  }
 }
 
 void startWiFiScan()
