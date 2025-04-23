@@ -82,3 +82,38 @@ const int daylightOffset_sec = 0;
 String current_user_str;
 JSONVar current_user;
 bool is_capture_panel_hidden;
+
+
+void initSPIFFS();
+const char* get_var_networks();
+void set_var_networks(const char* value);
+String readFile(fs::FS &fs, const char* path);
+void writeFile(fs::FS &fs, const char* path, const char* message);
+void update_UI();
+void getTime();
+void timeavailable(struct timeval* t);
+void touchscreen_read(lv_indev_t* indev, lv_indev_data_t* data);
+static uint32_t my_tick();
+void startWiFiScan();
+void printScannedNetworks(uint16_t networksFound);
+
+
+void action_settings_text_area_event_cb(lv_event_t* e);
+void action_capture_text_area_event_cb(lv_event_t* e);
+void action_capture_text_area_numerical_event_cb(lv_event_t* e);
+void action_class_details_text_area_event_cb(lv_event_t* e);
+void action_class_details_text_area_numerical_event_cb(lv_event_t* e);
+void action_home_to_settings(lv_event_t* e);
+void action_home_to_capture(lv_event_t* e);
+void action_home_to_class_details(lv_event_t* e);
+void action_save_settings_handler(lv_event_t* e);
+void action_settings_to_home(lv_event_t* e);
+void action_class_details_to_home(lv_event_t* e);
+void action_start_class_handler(lv_event_t* e);
+void action_capture_to_home(lv_event_t* e);
+void action_current_user_to_home(lv_event_t* e);
+void action_capture_fprint_handler(lv_event_t* e);
+void action_capture_image_handler(lv_event_t* e);
+void action_capture_submit_handler(lv_event_t* e);
+void action_flash_card_handler(lv_event_t* e);
+void action_capture_panel_hide(lv_event_t* e);
