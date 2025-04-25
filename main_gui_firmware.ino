@@ -201,16 +201,11 @@ void loop()
 
   if (lv_scr_act() == objects.current_user_screen)
   {
-    static char read_char;
-    read_char = 0;
     current_user_str = "";
     static uint32_t panel_timer = millis();
 
-    while (Serial.available() > 0)
-    {
-      read_char = Serial.read();
-      current_user_str += read_char;
-    }
+    if (Serial.available() > 0)
+      current_user_str = Serial.readStringUntil('\n');
 
     if (!current_user_str.isEmpty())
     {
@@ -221,11 +216,12 @@ void loop()
         lv_label_set_text(objects.current_user_matric_no, current_user["matric_no"]);
         lv_label_set_text(objects.current_user_level, current_user["level"]);
         lv_label_set_text(objects.current_user_dept, current_user["dept"]);
-        // TODO: Show no picture for no auth
-        if ((bool)current_user["verified"])
-          lv_image_set_src(objects.current_user_image, &img_img_accept);
-        else
-          lv_image_set_src(objects.current_user_image, &img_img_reject);
+        if (lv_dropdown_get_selected(objects.class_auth_mode_dropdown)){
+          if ((bool)current_user["verified"])
+            lv_image_set_src(objects.current_user_image, &img_img_accept);
+          else
+            lv_image_set_src(objects.current_user_image, &img_img_reject);
+        }
         lv_obj_clear_flag(objects.current_user_info_panel, LV_OBJ_FLAG_HIDDEN);
       }
     }
@@ -239,15 +235,8 @@ void loop()
 
   if (lv_scr_act() == objects.capture_screen && !is_capture_panel_hidden && Serial.available() > 0)
   {
-    static char read_char;
     static String capture_panel_content;
-
-    while (Serial.available() > 0)
-    {
-      read_char = Serial.read();
-      capture_panel_content += read_char;
-    }
-
+    capture_panel_content = Serial.readStringUntil('\n');
     lv_label_set_text(objects.capture_info_text, capture_panel_content.c_str());
     capture_panel_content = "";
   }
@@ -310,7 +299,7 @@ void writeFile(fs::FS &fs, const char *path, const char *message)
   }
   if (file.print(message))
   {
-    LOGF("- file written");
+    LOG("- file written");
   }
   else
   {
@@ -514,7 +503,7 @@ void action_save_settings_handler(lv_event_t *e)
   ret["args"]["ssid"] = String(selected_network);
   ret["args"]["pwd"] = String(lv_textarea_get_text(objects.wifi_pwd_textarea_content));
 
-  Serial.printf("Connecting to %s ", selected_network);
+  LOGF("Connecting to %s \n", selected_network);
   WiFi.begin((const char *)ret["args"]["ssid"], (const char *)ret["args"]["pwd"]);
   static uint32_t wifi_timer = millis();
 
@@ -524,14 +513,14 @@ void action_save_settings_handler(lv_event_t *e)
     if (millis() - wifi_timer > 10000)
     {
       wifi_timer = millis();
-      Serial.printf("Connection to %s timed out!\n", selected_network);
-      break;
+      LOGF("Connection to %s timed out!\n", selected_network);
+      return;
     }
   }
 
   LOG("CONNECTED");
   writeFile(SPIFFS, "/config.json", JSON.stringify(ret["args"]).c_str());
-  ret["args"]["cmd"] = "change_wifi";
+  ret["args"]["cmd"] = "change_network";
   Serial.println(JSON.stringify(ret).c_str());
   return;
 }
@@ -623,7 +612,21 @@ void action_capture_fprint_handler(lv_event_t *e)
 
 void action_capture_image_handler(lv_event_t *e)
 {
-  Serial.println("{\"cmd\":\"capture_image\",\"args\":{}}");
+  JSONVar res;
+  res["args"] = JSONVar();
+
+  res["args"]["name"] = lv_textarea_get_text(objects.student_name_textarea_content);
+  res["args"]["matric_no"] = String(lv_textarea_get_text(objects.student_matric_no_year)) + String(lv_textarea_get_text(objects.student_matric_no_reg_no));
+
+  char level[4], dept[4];
+  lv_dropdown_get_selected_str(objects.student_level_dropdown, level, 4);
+  res["args"]["level"] = level;
+  lv_dropdown_get_selected_str(objects.student_department_dropdown, dept, 4);
+  res["args"]["dept"] = dept;
+  res["args"]["cmd"] = "enroll_face";
+
+  res["cmd"] = "take_photo";
+  Serial.println(JSON.stringify(res).c_str());
   lv_obj_clear_flag(objects.capture_info_panel, LV_OBJ_FLAG_HIDDEN);
   is_capture_panel_hidden = false;
   return;
