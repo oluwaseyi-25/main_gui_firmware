@@ -83,6 +83,16 @@ String current_user_str;
 JSONVar current_user;
 bool is_capture_panel_hidden;
 
+enum COMMANDS {
+  CHANGE_NETWORK,
+  CHANGE_SCREEN,
+  FLASH_CARD,
+  CAPTURE_FPRINT,
+  START_CLASS,
+  TAKE_PHOTO,
+  DIAGNOSTICS,
+  SAVE_NEW_USER
+};
 
 void initSPIFFS();
 const char* get_var_networks();

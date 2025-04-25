@@ -83,7 +83,7 @@ void setup()
 
         if (code == LV_EVENT_SCREEN_LOADED)
         {
-          Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"home_screen\"}}"));
+          Serial.printf(F("{\"cmd\": %u, \"args\":{\"screen_name\":\"home_screen\"}}\n"), CHANGE_SCREEN);
         }
         return;
       },
@@ -99,7 +99,7 @@ void setup()
         if (code == LV_EVENT_SCREEN_LOADED)
         {
           network_scanned = false;
-          Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"settings_screen\"}}"));
+          Serial.printf(F("{\"cmd\": %u, \"args\":{\"screen_name\":\"settings_screen\"}}\n"), CHANGE_SCREEN);
         }
         return;
       },
@@ -114,7 +114,7 @@ void setup()
 
         if (code == LV_EVENT_SCREEN_LOADED)
         {
-          Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"capture_screen\"}}"));
+          Serial.printf(F("{\"cmd\": %u, \"args\":{\"screen_name\":\"capture_screen\"}}\n"), CHANGE_SCREEN);
         }
         return;
       },
@@ -129,7 +129,7 @@ void setup()
 
         if (code == LV_EVENT_SCREEN_LOADED)
         {
-          Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"class_details_screen\"}}"));
+          Serial.printf(F("{\"cmd\": %u, \"args\":{\"screen_name\":\"class_details_screen\"}}\n"), CHANGE_SCREEN);
         }
         return;
       },
@@ -144,7 +144,7 @@ void setup()
 
         if (code == LV_EVENT_SCREEN_LOADED)
         {
-          Serial.println(F("{\"cmd\": \"change_screen\", \"args\":{\"screen_name\":\"current_user_screen\"}}"));
+          Serial.printf(F("{\"cmd\": %u, \"args\":{\"screen_name\":\"current_user_screen\"}}\n"), CHANGE_SCREEN);
         }
         return;
       },
@@ -572,7 +572,7 @@ void action_start_class_handler(lv_event_t *e)
   lv_dropdown_get_selected_str(objects.class_auth_mode_dropdown, auth, 16);
   class_details["args"]["auth_mode"] = auth;
 
-  class_details["cmd"] = "start_class";
+  class_details["cmd"] = START_CLASS;
   Serial.println(JSON.stringify(class_details).c_str());
   lv_scr_load_anim(objects.current_user_screen, LV_SCR_LOAD_ANIM_OVER_TOP, 300, 0, false);
 
@@ -625,7 +625,7 @@ void action_capture_image_handler(lv_event_t *e)
   res["args"]["dept"] = dept;
   res["args"]["cmd"] = "enroll_face";
 
-  res["cmd"] = "take_photo";
+  res["cmd"] = TAKE_PHOTO;
   Serial.println(JSON.stringify(res).c_str());
   lv_obj_clear_flag(objects.capture_info_panel, LV_OBJ_FLAG_HIDDEN);
   is_capture_panel_hidden = false;
@@ -646,7 +646,7 @@ void action_capture_submit_handler(lv_event_t *e)
   lv_dropdown_get_selected_str(objects.student_department_dropdown, dept, 4);
   biodata["args"]["dept"] = dept;
 
-  biodata["cmd"] = "save_new_student";
+  biodata["cmd"] = SAVE_NEW_USER;
   Serial.println(JSON.stringify(biodata));
   return;
 }
@@ -665,7 +665,7 @@ void action_flash_card_handler(lv_event_t *e)
   lv_dropdown_get_selected_str(objects.student_department_dropdown, dept, 4);
   biodata["args"]["dept"] = dept;
 
-  biodata["cmd"] = "flash_card";
+  biodata["cmd"] = FLASH_CARD;
   Serial.println(JSON.stringify(biodata));
   return;
 }
